@@ -50,119 +50,70 @@ function welcome() {
 
 
 function listItems() {
-    console.log("Check out our cool fuggin shit...\n");
+    console.log("Check out our cool merch...\n");
         var query = connection.query("SELECT * FROM products",
             function (err, res){
             if(err) throw err;
             console.log("\n");
             for(var i = 0; i < res.length; i++){
                 var inventoryList =
-                `ID:${res[i].item_id}....${res[i].product_name}....$${res[i].price}`;
+                `ID:${res[i].item_id}....${res[i].product_name}....${res[i].department_name}....$${res[i].price}....QTY: ${res[i].quantity} `;
                 console.log(inventoryList);
             }
             console.log("\n");
-            selectItem();           
-});
+            promptUser()
+        });
 return;
 };
 
-function selectItem(){
-    inquirer.prompt([
-        {
+
+
+
+//Call the function to prompt user.
+function promptUser() {
+    inquirer.prompt([{
         type: "input",
-        name: "purchaseID",
-        message: "Enter the Item # of your purchase:"
-        }
-
-        ]).then(function(user) {
-            const userData= user.purchaseID;
-            console.log(userData);
-        }).then(function(user){
-        selectQuantity();
-        });
-
-}
-
-function selectQuantity(){
-    inquirer.prompt([
-        {
+        name: "idNum",
+        message: "Enter ID of item you'd like to purchase:"
+      },
+      {
         type: "input",
-        name: "quantity",
-        message: "Enter the Quanty to purchase:"
+        name: "qtyNum",
+        message: "Enter quantity of item to purchase:"
+      }
+      //Code that uses order input to change stock number in the database.
+    ]).then(function(answer) {
+      connection.query("SELECT * FROM products", function(err, res) {
+        if (err) throw err;
+        var purchase;
+        for (var i = 0; i < res.length; i++) {
+          if (res[i].item_id === parseInt(answer.idNum)) {
+            purchase = res[i];
+            totalPrice = (purchase.price * answer.qtyNum);
+          }
         }
-
-        ]).then(function(user) {
-            const userData = user.quantity;
-            console.log("You have purchased QTY. "+userData+" of Item #");
-        }).then(function(user){
+        if (purchase.quantity >= parseInt(answer.qtyNum)) {
+          connection.query(
+            "UPDATE products SET ? WHERE ?",
+            [{
+                quantity: (purchase.quantity - parseInt(answer.qtyNum))
+              },
+              {
+                item_id: purchase.item_id
+              }
+            ],
+          );
+          console.log(
+            `Total price for purchase today is $${totalPrice}.`
+          );
+        } else {
+          console.log("Not enough inventory available. Lower quantity and try again.")
+        };
         welcome();
-        });
+      });
+    });
+  };
 
-}
-
-//     "INSERT INTO products SET ?",
-//     {
-//       flavor: "Rocky Road",
-//       price: 3.0,
-//       quantity: 50
-//     },
-//     function(err, res) {
-//       console.log(res.affectedRows + " product inserted!\n");
-//       // Call updateProduct AFTER the INSERT completes
-//       updateProduct();
-//     }
-//   );
-
-//   // logs the actual query being run
-//   console.log(query.sql);
-// }
-
-// function updateProduct() {
-//   console.log("Updating all Rocky Road quantities...\n");
-//   var query = connection.query(
-//     "UPDATE products SET ? WHERE ?",
-//     [
-//       {
-//         quantity: 100
-//       },
-//       {
-//         flavor: "Rocky Road"
-//       }
-//     ],
-//     function(err, res) {
-//       console.log(res.affectedRows + " products updated!\n");
-//       // Call deleteProduct AFTER the UPDATE completes
-//       deleteProduct();
-//     }
-//   );
-
-//   // logs the actual query being run
-//   console.log(query.sql);
-// }
-
-// function deleteProduct() {
-//   console.log("Deleting all strawberry icecream...\n");
-//   connection.query(
-//     "DELETE FROM products WHERE ?",
-//     {
-//       flavor: "strawberry"
-//     },
-//     function(err, res) {
-//       console.log(res.affectedRows + " products deleted!\n");
-//       // Call readProducts AFTER the DELETE completes
-//       readProducts();
-//     }
-//   );
-// }
-
-// function readProducts() {
-//   console.log("Selecting all products...\n");
-//   connection.query("SELECT * FROM products", function(err, res) {
-//     if (err) throw err;
-//     // Log all results of the SELECT statement
-//     console.log(res);
-//   });
-// }
 
 function quitProgram() {
     console.log("Thank you. Come again!")
