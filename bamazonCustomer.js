@@ -19,8 +19,34 @@ var connection = mysql.createConnection({
 connection.connect(function(err) {
   if (err) throw err;
   console.log("connected as id " + connection.threadId + "\n");
-    listItems()
+    welcome();
 });
+
+function welcome() {
+    inquirer.prompt([
+        {
+            type: "list",
+            name: "userChoice",
+            message: "Make a selection:",
+            choices: ["Purchase item", "List items", "Quit"]
+        }
+
+    ]).then(function(user) {
+        const userChoice = user.userChoice;
+        if (userChoice === "Purchase item") {
+            listItems();
+        }
+        else if (userChoice === "List items") {
+            listItems();
+        }
+        else if (userChoice === "Quit") {
+            quitProgram();
+        }
+        else {
+            welcome();
+        }
+    });
+  }
 
 
 function listItems() {
@@ -34,10 +60,45 @@ function listItems() {
                 `ID:${res[i].item_id}....${res[i].product_name}....$${res[i].price}`;
                 console.log(inventoryList);
             }
-            console.log("\n");            
+            console.log("\n");
+            selectItem();           
 });
 return;
 };
+
+function selectItem(){
+    inquirer.prompt([
+        {
+        type: "input",
+        name: "purchaseID",
+        message: "Enter the Item # of your purchase:"
+        }
+
+        ]).then(function(user) {
+            const userData= user.purchaseID;
+            console.log(userData);
+        }).then(function(user){
+        selectQuantity();
+        });
+
+}
+
+function selectQuantity(){
+    inquirer.prompt([
+        {
+        type: "input",
+        name: "quantity",
+        message: "Enter the Quanty to purchase:"
+        }
+
+        ]).then(function(user) {
+            const userData = user.quantity;
+            console.log("You have purchased QTY. "+userData+" of Item #");
+        }).then(function(user){
+        welcome();
+        });
+
+}
 
 //     "INSERT INTO products SET ?",
 //     {
@@ -102,4 +163,9 @@ return;
 //     console.log(res);
 //   });
 // }
-// connection.end();
+
+function quitProgram() {
+    console.log("Thank you. Come again!")
+    connection.end();
+}
+
